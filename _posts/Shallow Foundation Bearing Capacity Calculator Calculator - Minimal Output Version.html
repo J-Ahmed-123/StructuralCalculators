@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shallow Foundation Bearing Capacity Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: flex-start;
+            gap: 30px;
+        }
+        .section {
+            width: 30%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid black;
+        }
+        td {
+            border: 1px solid black;
+            padding: 3px;
+			text-align: center
+        }
+        td:first-child {
+            text-align: left; 
+        }
+        input[type="number"], input[type="checkbox"] {
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        input[type="number"] {
+            width: 90%;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .output-container {
+            text-align: left;
+        }
+        .output-box {
+            width: 275px;
+            padding: 5px;
+            border: 1px solid black;
+            margin-top: 5px;
+            text-align: left;
+        }		
+    </style>
+</head>
+<body>
+    <h1>Shallow Foundation Bearing Capacity Calculator</h1>
+
+    <!-- Precision Input -->
+    <br>
+        Precision: <input type="number" id="precision" value="6" min="1" name="precision" style="width: 150px ;">
+    <br>
+	<br>
+    <input type="button" onclick="resetPage()" value="Reset page">
+
+    <div class="container">
+        <!-- Soil Properties Column -->
+        <div class="section">
+            <h2>Soil Properties</h2>
+            <table>
+                <tr>
+                    <td>Effective Cohesion (kN/m<sup>2</sup>)</td>
+                    <td>C’</td>
+                    <td><input type="number" id="cohesion" name="cohesion" min="0" value="20"></td>
+                </tr>
+                <tr>
+                    <td>Effective Friction Angle (&deg;)</td>
+                    <td>&phi;'</td>
+                    <td><input type="number" id="frictionAngle" name="frictionAngle" min="0" max="90" value="25"></td>
+                </tr>
+                <tr>
+                    <td>Soil Unit Weight (kN/m<sup>3</sup>)</td>
+                    <td>&gamma;</td>
+                    <td><input type="number" id="unitWeight" name="unitWeight" min="0" value="19"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Foundation Properties Column -->
+        <div class="section">
+            <h2>Foundation Properties</h2>
+            <table>
+				<tr>
+					<td>Square or Circular Foundation</td>
+					<td></td>
+					<td><input type="checkbox" id="squareFoundation" name="squareFoundation"></td>
+				</tr>			
+                <tr>
+                    <td>Foundation Width (m)</td>
+                    <td>B</td>
+                    <td><input type="number" id="bLength" name="bLength" min="0" value="2.5"></td>
+                </tr>
+				<tr id="lLengthRow">
+					<td>Foundation Length (m)</td>
+					<td>L</td>
+					<td><input type="number" id="lLength" name="lLength" min="0" value="2.5"></td>
+				</tr>					
+                <tr>
+                    <td>Eccentricity in Direction B (m)</td>
+                    <td>e<sub>b</sub></td>
+                    <td><input type="number" id="eb" name="eb" min="0" value="0.4"></td>
+                </tr>
+				<tr id="elRow">
+					<td>Eccentricity in Direction L (m)</td>
+					<td>e<sub>l</sub></td>
+					<td><input type="number" id="el" name="el" min="0" value="0"></td>
+				</tr>				
+                <tr>
+                    <td>Footing Depth (m)</td>
+                    <td>D</td>
+                    <td><input type="number" id="depth" name="depth" min="0" value="1.25"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Additional Properties column -->	
+        <div class="section">
+            <h2>Additional Properties</h2>
+            <table>
+                <tr>
+                    <td>Global Factor of Safety</td>
+                    <td>FoS</td>
+                    <td><input type="number" id="fos" name="fos" min="0" value="3"></td>
+                </tr>
+            </table>
+
+            <div class="checkbox-container">
+                <label for="groundwater">Water Presence</label>
+                <input type="checkbox" id="groundwater" name="groundwater" >				
+            </div>
+
+            <table id="groundwaterTable" style="display: none; margin-top: 10px;">
+                <tr>
+                    <td>Saturated Unit Weight (kN/m<sup>2</sup>)</td>
+                    <td>&gamma;<sub>sat</sub></td>
+                    <td><input type="number" id="saturatedWeight" name="saturatedWeight" min="9.81" value="21"></td>
+                </tr>
+                <tr>
+                    <td>Water Table Depth (m)</td>
+                    <td>D<sub>w</sub></td>
+                    <td><input type="number" id="dw" name="dw" min="0" value="0.5"></td>
+                </tr>
+            </table>
+
+            <div class="checkbox-container">
+                <label for="localShear">Local Shear Failure</label>
+                <input type="checkbox" id="localShear" name="localShear">				
+            </div>
+        </div>
+    </div>
+
+    <div class="output-container">
+        <button id="calculate" onclick="calculate()">Calculate</button>
+		<!---<div class="output-box">Used Friction Angle (phi): <span id="Usedphioutput">0</span></div> --->
+		<div class="output-box">Case Type: <span id="CaseTypeoutput">0</span></div>
+		<!---<div class="output-box">B' : <span id="Bprimeoutput">0</span></div> --->
+		<!---<div class="output-box">L' : <span id="Lprimeoutput">0</span></div> --->
+		<!---<div class="output-box">Nq: <span id="N_q_output">0</span></div> --->
+		<!---<div class="output-box">Nc: <span id="N_c_output">0</span></div> --->
+		<!---<div class="output-box">Nγ: <span id="N_gamma_output">0</span></div> --->
+		<!---<div class="output-box">s_q: <span id="s_q_output">0</span></div> --->
+		<!---<div class="output-box">s_c: <span id="s_c_output">0</span></div> --->
+		<!---<div class="output-box">s_γ: <span id="s_gamma_output">0</span></div> --->
+		<!---<div class="output-box">Used Unit Weight: <span id="UseableUnitWeightoutput">0</span></div> --->
+		<!---<div class="output-box">q Value: <span id="q_value_output">0</span></div> --->
+		<div class="output-box">Ultimate Bearing Capacity: <span id="q_ultimate_output">0</span></div>
+		<div class="output-box">Allowable Bearing Capacity: <span id="q_allowable_output">0</span></div>
+    </div>
+	
+    <script>
+//---------------------------------------------------------------------------------------------------
+        
+		// Hiding inputs for groundwater Table
+		const groundwaterCheckbox = document.getElementById("groundwater");
+        const groundwaterTable = document.getElementById("groundwaterTable");
+        const resetButton = document.getElementById("resetPage");
+
+        groundwaterCheckbox.addEventListener("change", () => {
+            if (groundwaterCheckbox.checked) {
+                groundwaterTable.style.display = "table";	//Show groundwaterTable Table
+            } else {
+                groundwaterTable.style.display = "none";	//Hide groundwaterTable Table
+            }
+        });
+		
+//------------------------------------------------------------------------------------------------------
+		
+		// Hiding inputs for rectangles 
+		document.getElementById("squareFoundation").addEventListener("change", function () {
+			const lLengthRow = document.getElementById("lLengthRow");
+			const elRow = document.getElementById("elRow");
+
+			if (this.checked) {
+				lLengthRow.style.display = "none";  // Hide Foundation Length
+				elRow.style.display = "none";       // Hide Eccentricity in Direction L
+			} else {
+				lLengthRow.style.display = "table-row"; // Show Foundation Length
+				elRow.style.display = "table-row";      // Show Eccentricity in Direction L
+			}
+		});
+//--------------------------------------------------------------------------------------------------
+
+		// Reset Page
+		function resetPage() {
+			document.getElementById("precision").value = "6";
+			document.getElementById("cohesion").value = "";
+			document.getElementById("frictionAngle").value = "";
+			document.getElementById("unitWeight").value = "";
+			document.getElementById("bLength").value = "";
+			document.getElementById("lLength").value = "";
+			document.getElementById("eb").value = "";
+			document.getElementById("el").value = "";
+			document.getElementById("depth").value = "";
+			document.getElementById("fos").value = "";
+			document.getElementById("saturatedWeight").value = "";
+			document.getElementById("dw").value = "";
+
+			// Reset checkboxes
+			document.getElementById("groundwater").checked = false;
+			document.getElementById("localShear").checked = false;
+			document.getElementById("squareFoundation").checked = false;
+
+			// Hide the groundwater table if visible
+			const groundwaterTable = document.getElementById("groundwaterTable");
+			if (groundwaterTable) {
+				groundwaterTable.style.display = "none";
+			}
+
+			return true; 
+		}
+		
+//-----------------------------------------------------------------------------------------------
+		
+//------------------------------------------------------------------------------------------------
+		
+		function calculate() {
+			var precision = parseInt( document.getElementById("precision").value);
+			var cohesion = parseFloat(document.getElementById("cohesion").value);
+			var frictionAngle_GSF = parseFloat(document.getElementById("frictionAngle").value);
+			var unitWeight = parseFloat(document.getElementById("unitWeight").value);
+			var bLength = parseFloat(document.getElementById("bLength").value);
+			var lLength = parseFloat(document.getElementById("lLength").value);
+			var eb = parseFloat(document.getElementById("eb").value);
+			var el = parseFloat(document.getElementById("el").value);
+			var depth = parseFloat(document.getElementById("depth").value);
+			var fos = parseFloat(document.getElementById("fos").value);
+			var saturatedWeight = parseFloat(document.getElementById("saturatedWeight").value);
+			var dw = parseFloat(document.getElementById("dw").value);
+			var groundwater = document.getElementById("groundwater").checked;
+			var localShear = document.getElementById("localShear").checked;
+			var squareFoundation = document.getElementById("squareFoundation").checked;			
+			
+			// Validation checks -------------------------------------------------------------------
+			
+			if (precision <= 0.0) { alert("Precision should be > 0"); return false; }
+			if (cohesion < 0.0) { alert("Cohesion should be >= 0"); return false; }
+			if (frictionAngle_GSF < 0.0 || frictionAngle_GSF > 90.0) { alert("Friction Angle should be between 0 and 90 degrees"); return false; }
+			if (unitWeight < 0.0) { alert("Unit Weight should be >= 0"); return false; }
+			if (bLength <= 0.0) { alert("Foundation Width (B) should be >= 0"); return false; }
+			if (lLength <= 0.0) { alert("Foundation Length (L) should be >= 0"); return false; }
+			if (eb < 0.0 || eb > bLength / 2.0) { alert("Eccentricity in Direction B (eb) can not be negative and should smaller than half of B"); return false; }
+			if (el < 0.0 || el > lLength / 2.0) { alert("Eccentricity in Direction L (el) can not be negative and should smaller than half of L"); return false; }
+			if (depth < 0.0) { alert("Footing Depth (D) should be >= 0"); return false; }
+			if (fos <= 0.0) { alert("Global Factor of Safety (FoS) should be > 0"); return false; }
+			if (groundwater && saturatedWeight < 9.81) { alert("Saturated Unit Weight should be >= 9.81 kN/m<sup>2<sup>"); return false; }
+			if (groundwater && dw < 0.0) { alert("Water Table Depth (Dw) should be >= 0"); return false; }
+			
+			// Classification -----------------------------------------------------------------
+
+			let caseType = "";
+			let caseType_Text = "";
+
+			if (groundwater && dw < depth) {
+				caseType = "Case 2a"; 	// Water table above foundation depth
+				caseType_Text = "Water table is above Foundation Depth";				
+			}
+
+			if (groundwater && dw >= depth) {
+				caseType = "Case 2b"; 	// Water table below foundation depth
+				caseType_Text = "Water table is below Foundation Depth";
+			}
+			
+			if (!groundwater) {
+				caseType = "Case 1"; 	// No groundwater present
+				caseType_Text = "No significant Water Table Effects";				
+			}
+
+			if ((dw - depth) >= bLength) {
+				caseType = "Case 1"; 	// Water table significantly below foundation
+			}			
+			
+			// Main Calculations
+			
+			if (squareFoundation) {
+				lLength = bLength;  // Square or Circular Foundation
+			}
+			
+			var B_prime = bLength - 2 * eb;		// Effective bLength
+			var L_prime = lLength - 2 * el;		// Effective lLength
+			
+			var frictionAngle_Use_rad = frictionAngle_GSF * (Math.PI / 180)		//Friction angle assumed to be GSF
+			
+			if (localShear) {
+				frictionAngle_Use_rad = Math.atan((2 / 3) * Math.tan(frictionAngle_GSF * Math.PI / 180)); 	// Friction angle altered if LSF
+			}
+
+			var frictionAngle_Use_deg = frictionAngle_Use_rad * (180/ Math.PI)	//Useless rad to angle
+			
+			var N_q = Math.exp(Math.PI * Math.tan(frictionAngle_Use_rad)) * Math.pow(Math.tan((Math.PI / 4) + (frictionAngle_Use_rad / 2)), 2);
+			
+			var N_c = (N_q - 1) * (1 / Math.tan(frictionAngle_Use_rad));	
+			
+			var N_gamma = 2 * (N_q - 1) * Math.tan(frictionAngle_Use_rad);
+			 
+			if (squareFoundation) {
+				s_q = 1 + Math.sin(frictionAngle_Use_rad);  // Square or Circular Foundation
+				s_gamma = 0.7
+			} else {
+				s_q = 1 + ((B_prime / L_prime) * Math.sin(frictionAngle_Use_rad));  // Rectangular Foundation
+				s_gamma = 1 - 0.3 * (B_prime / L_prime);
+			}
+			
+			var s_c = ((s_q * N_q)-1)/(N_q - 1)			
+			
+			var UseableUnitWeight = unitWeight;
+
+			if (caseType === "Case 2a" || caseType === "Case 2b") {
+				UseableUnitWeight = saturatedWeight - 9.81;
+			}
+			
+			if (caseType === "Case 1") {
+				q_value = unitWeight * depth;
+			}	
+			
+			if (caseType === "Case 2a") {
+				q_value = (unitWeight * dw) + (UseableUnitWeight * (depth - dw));
+			}			
+
+			if (caseType === "Case 2b") {
+				q_value = UseableUnitWeight + (((dw - depth) / dw) * (unitWeight - UseableUnitWeight));
+			}
+			
+			var q_ultimate = (cohesion * N_c * s_c) + (q_value * N_q * s_q) + (0.5 * B_prime * UseableUnitWeight * N_gamma * s_gamma);
+			
+			var q_allowable = q_ultimate / fos
+				
+			
+			// Display rounded outputs
+			document.getElementById( "CaseTypeoutput" ).innerText = caseType_Text ;
+			document.getElementById( "q_ultimate_output" ).innerText = q_ultimate.toPrecision(precision) ;
+			document.getElementById( "q_allowable_output" ).innerText =	q_allowable.toPrecision(precision) ;	
+			//document.getElementById( "Usedphioutput" ).innerText = frictionAngle_Use_deg.toPrecision(precision);
+			//document.getElementById( "Bprimeoutput" ).innerText = B_prime.toPrecision(precision) ;
+			//document.getElementById( "Lprimeoutput" ).innerText = L_prime.toPrecision(precision) ;			
+			//document.getElementById( "N_q_output" ).innerText =	N_q.toPrecision(precision)	;
+			//document.getElementById( "N_c_output" ).innerText =	N_c.toPrecision(precision)	;
+			//document.getElementById( "N_gamma_output" ).innerText =	N_gamma.toPrecision(precision);
+			//document.getElementById( "s_q_output" ).innerText =	s_q.toPrecision(precision)	;
+			//document.getElementById( "s_c_output" ).innerText =	s_c.toPrecision(precision)	;
+			//document.getElementById( "s_gamma_output" ).innerText =	s_gamma.toPrecision(precision)	;
+			//document.getElementById( "UseableUnitWeightoutput" ).innerText = UseableUnitWeight.toPrecision(precision) ;
+			//document.getElementById( "q_value_output" ).innerText =	q_value.toPrecision(precision) ;
+			return true;
+		}
+		
+//------------------------------------------------------------------------------------------------
+				
+    </script>
+</body>
+</html>

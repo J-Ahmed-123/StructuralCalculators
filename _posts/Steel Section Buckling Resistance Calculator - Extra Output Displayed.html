@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steel Section Buckling Resistance Calculator</title>
+    <style>
+        body {font-family: Arial, sans-serif;}
+        
+		h1 {text-align: left;
+            margin-bottom: 20px;}
+        
+		.container {
+            display: flex;
+            justify-content: flex-start;
+            gap: 30px;}
+        
+		.section {width: 40%;}
+		
+        table {width: 100%;
+            border-collapse: collapse;
+            border: 1px solid black;}
+
+        td {border: 1px solid black;
+            padding: 3px;
+			text-align: center;}
+		
+        td:first-child {text-align: left; }
+		
+		input[type="number"] {padding: 5px;
+			width: 90%;
+			box-sizing: border-box;}
+		
+        .output-box {width: 25%;
+            padding: 5px;
+            border: 1px solid black;
+            margin-top: 5px;
+            text-align: left;}		
+    </style>
+</head>
+<body>
+    <h1>Steel Section Buckling Resistance Calculator</h1>
+
+    <!-- Precision and Reset -->
+    <br>
+        Precision: <input type="number" id="precision" value="6" min="1" name="precision" style="width: 150px ;">
+    <br>
+	<br>
+    <input type="button" onclick="resetPage()" value="Reset page">
+	
+    <div class="container">
+        <!-- Steel Section Properties Column -->
+        <div class="section">
+            <h2>Steel Section Properties</h2>
+            <table>
+                <tr>
+                    <td>Yield Strength (N/mm<sup>2</sup>)</td>
+                    <td>F<sub>y</sub></td>
+                    <td><input type="number" id="yieldstrength" name="yieldstrength" min="0" value="355"></td>
+                </tr>
+                <tr>
+                    <td>Cross-Sectional Area (cm<sup>2</sup>)</td>
+                    <td>A</td>
+                    <td><input type="number" id="area" name="area" min="0" value="48.4"></td>
+                </tr>
+                <tr>
+                    <td>Radius of Gyration (Y Axis) (cm)</td>
+                    <td>i<sub>y</sub></td>
+                    <td><input type="number" id="iy" name="iy" min="0" value="7.89"></td>
+                </tr>
+                <tr>
+                    <td>Radius of Gyration (X Axis) (cm)</td>
+                    <td>i<sub>z</sub></td>
+                    <td><input type="number" id="iz" name="iz" min="0" value="7.89"></td>
+                </tr>
+                <tr>
+                    <td>Partial Factor for Cross Sections</td>
+                    <td>&gamma;<sub>M0</sub></td>
+                    <td><input type="number" id="gammaM0" name="gammaM0" min="0" value="1.0"></td>
+                </tr>
+                <tr>
+                    <td>Partial Factor for Members</td>
+                    <td>&gamma;<sub>M1</sub></td>
+                    <td><input type="number" id="gammaM1" name="gammaM1" min="0" value="1.0"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Buckling Properties Column -->
+        <div class="section">
+            <h2>Buckling Properties</h2>
+            <table>
+                <tr>
+                    <td>Imperfection Factor (Major Axis)</td>
+                    <td>&alpha;<sub>y</sub></td>
+                    <td><input type="number" id="alphaY" name="alphaY" min="0" value="0.21"></td>
+                </tr>
+                <tr>
+                    <td>Imperfection Factor (Minor Axis)</td>
+                    <td>&alpha;<sub>z</sub></td>
+                    <td><input type="number" id="alphaZ" name="alphaZ" min="0" value="0.21"></td>
+                </tr>
+                <tr>
+                    <td>Buckling Length (Y plane buckling) (mm)</td>
+                    <td>L<sub>CR,y</sub></td>
+                    <td><input type="number" id="critLengthy" name="critLengthy" min="0" value="6000"></td>
+                </tr>
+                <tr>
+                    <td>Buckling Length (Z plane buckling) (mm)</td>
+                    <td>L<sub>CR,z</sub></td>
+                    <td><input type="number" id="critLengthz" name="critLengthz" min="0" value="6000"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+	<br>
+    <div class="output-container">
+        <button id="calculate" onclick="calculate()">Calculate</button>
+        <div class="output-box">Area in mm: <span id="Areamm_Out">0</span></div>
+        <div class="output-box">N<sub>c,Rd</sub> (KN): <span id="N_crd_KN_Out">0</span></div>
+        <div class="output-box">Strain: <span id="Strain_Out">0</span></div>
+        <div class="output-box">i<sub>y</sub> in mm: <span id="iy_mm_Out">0</span></div>	
+        <div class="output-box">i<sub>z</sub> in mm: <span id="iz_mm_Out">0</span></div>
+        <div class="output-box">Lambda 1: <span id="Lambda_1_Out">0</span></div>
+        <div class="output-box">Lambda y: <span id="Lambda_y_Out">0</span></div>
+        <div class="output-box">Lambda y Bar: <span id="Lambda_y_Bar_Out">0</span></div>   
+        <div class="output-box">Phi y: <span id="Phi_y_Out">0</span></div>
+        <div class="output-box">Reduction Factor (Y-plane Buckling): <span id="Chi_y_Out">0</span></div>
+        <div class="output-box">Lambda z: <span id="Lambda_z_Out">0</span></div>
+        <div class="output-box">Lambda z Bar: <span id="Lambda_z_Bar_Out">0</span></div>	    
+        <div class="output-box">Phi z: <span id="Phi_z_Out">0</span></div>
+        <div class="output-box">Reduction Factor (Z-plane Buckling): <span id="Chi_z_Out">0</span></div>
+        <div class="output-box">Minimum Reduction Factor: <span id="Chi_min_Out">0</span></div>
+        <div class="output-box">N<sub>b,Rd</sub> (KN): <span id="N_brd_KN_Out">0</span></div>
+	</div>
+
+    <script>
+	
+//--------------------------------------------------------------------------------------------------
+
+		// Reset Page
+		function resetPage() {
+			document.getElementById("precision").value = "6";
+			document.getElementById("yieldstrength").value = "";
+			document.getElementById("area").value = "";
+			document.getElementById("iy").value = "";
+			document.getElementById("iz").value = "";
+			document.getElementById("gammaM0").value = "";
+			document.getElementById("gammaM1").value = "";
+			document.getElementById("alphaY").value = "";
+			document.getElementById("alphaZ").value = "";
+			document.getElementById("critLengthy").value = "";
+			document.getElementById("critLengthz").value = "";
+			return true; 
+		}
+		
+//---------------------------------------------------------------------------------------------------
+		
+        function calculate() {
+			
+			// Getting Variables
+			
+			var precision = parseInt( document.getElementById("precision").value);		
+			var yieldstrength = parseFloat(document.getElementById("yieldstrength").value);
+			var area = parseFloat(document.getElementById("area").value);
+			var iy = parseFloat(document.getElementById("iy").value);
+			var iz = parseFloat(document.getElementById("iz").value);
+			var gammaM0 = parseFloat(document.getElementById("gammaM0").value);
+			var gammaM1 = parseFloat(document.getElementById("gammaM1").value);
+			var alphaY = parseFloat(document.getElementById("alphaY").value) ;
+			var alphaZ = parseFloat(document.getElementById("alphaZ").value);
+			var critLengthy = parseFloat(document.getElementById("critLengthy").value) ;
+			var critLengthz = parseFloat(document.getElementById("critLengthz").value);
+
+			// Validation checks 
+			
+			if (precision <= 0) { alert("Precision should be > 0"); return false; }
+			if (yieldstrength <= 0) { alert("Yield Strength should be > 0"); return false; }
+			if (area <= 0) { alert("Cross-Sectional Area should be > 0"); return false; }
+			if (iy <= 0) { alert("Radius of Gyration (Major Axis) should be > 0"); return false; }
+			if (iz <= 0) { alert("Radius of Gyration (Minor Axis) should be > 0"); return false; }
+			if (gammaM0 <= 0) { alert("Partial Factor for Cross Sections should be > 0"); return false; }
+			if (gammaM1 <= 0) { alert("Partial Factor for Members should be > 0"); return false; }
+			if (alphaY <= 0) { alert("Imperfection Factor (Major Axis) should be > 0"); return false; }
+			if (alphaZ <= 0) { alert("Imperfection Factor (Minor Axis) should be > 0"); return false; }
+			if (critLengthy <= 0) { alert("Buckling Length (Y-plane Buckling) should be > 0"); return false; }
+			if (critLengthz <= 0) { alert("Buckling Length (Z-plane Buckling) should be > 0"); return false; }			
+			
+			
+			// Main Calculations
+			
+			var area_mm = area * 100
+			
+			var N_crd_KN = ((area_mm * yieldstrength)/ gammaM0)/1000
+			
+			var iy_mm = iy * 10
+			var iz_mm = iz * 10
+			
+			var strain = Math.sqrt(235/yieldstrength)
+			
+			var Lambda_1 = 93.9 * strain
+			
+			// Reduction Factor Y
+			
+			var Lambda_y = critLengthy / iy_mm
+			
+			var Lambda_y_Bar = Lambda_y / Lambda_1
+			
+			var Phi_y = 0.5 * (1 + (alphaY * (Lambda_y_Bar - 0.2)) + (Math.pow(Lambda_y_Bar,2)))
+			
+			var Chi_y = 1/ (Phi_y + Math.sqrt((Math.pow(Phi_y,2)) - (Math.pow(Lambda_y_Bar,2))))
+			
+			// Reduction Factor Z
+			
+			var Lambda_z = critLengthz / iz_mm
+			
+			var Lambda_z_Bar = Lambda_z / Lambda_1
+			
+			var Phi_z = 0.5 * (1 + (alphaZ * (Lambda_z_Bar - 0.2)) + (Math.pow(Lambda_z_Bar,2)))
+			
+			var Chi_z = 1/ (Phi_z + Math.sqrt((Math.pow(Phi_z,2)) - (Math.pow(Lambda_z_Bar,2))))
+			
+			
+			var Chi_min = Math.min(Chi_y, Chi_z)
+			
+			var N_brd_KN = ((Chi_min * area_mm * yieldstrength)/ gammaM1)/1000			
+			
+			// Display Outputs
+			document.getElementById("Areamm_Out").innerText = area_mm.toPrecision(precision);
+			document.getElementById("N_crd_KN_Out").innerText = N_crd_KN.toPrecision(precision);
+			document.getElementById("Strain_Out").innerText = strain.toPrecision(precision);			
+			document.getElementById("iy_mm_Out").innerText = iy_mm.toPrecision(precision);
+			document.getElementById("iz_mm_Out").innerText = iz_mm.toPrecision(precision);
+			document.getElementById("Lambda_1_Out").innerText = Lambda_1.toPrecision(precision);			
+			document.getElementById("Lambda_y_Out").innerText = Lambda_y.toPrecision(precision);	
+			document.getElementById("Lambda_y_Bar_Out").innerText = Lambda_y_Bar.toPrecision(precision);
+			document.getElementById("Phi_y_Out").innerText = Phi_y.toPrecision(precision);
+			document.getElementById("Chi_y_Out").innerText = Chi_y.toPrecision(precision);
+			document.getElementById("Lambda_z_Out").innerText = Lambda_z.toPrecision(precision);	
+			document.getElementById("Lambda_z_Bar_Out").innerText = Lambda_z_Bar.toPrecision(precision);
+			document.getElementById("Phi_z_Out").innerText = Phi_z.toPrecision(precision);
+			document.getElementById("Chi_z_Out").innerText = Chi_z.toPrecision(precision);
+			document.getElementById("Chi_min_Out").innerText = Chi_min.toPrecision(precision);
+			document.getElementById("N_brd_KN_Out").innerText = N_brd_KN.toPrecision(precision);			
+			return true;
+		}
+		
+    </script>
+</body>
+</html>

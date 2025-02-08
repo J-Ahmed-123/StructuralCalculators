@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinforced Concrete Bending Moment Capacity Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: flex-start;
+            gap: 30px;
+        }
+        .section {
+            width: 40%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid black;			
+        }
+        td {
+            border: 1px solid black;
+            padding: 3px;
+			text-align: center
+        }
+        td:first-child {
+            text-align: left; 
+        }
+        input[type="number"], input[type="checkbox"] {
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        input[type="number"] {
+            width: 90%;
+        }
+		
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 10px;			
+        }
+
+        .output-container {
+            text-align: left;
+            margin-top: 30px;			
+        }
+        .output-box {
+            width: 275px;
+            padding: 5px;
+            border: 1px solid black;
+            margin-top: 5px;
+            text-align: left;
+        }		
+    </style>
+</head>
+<body>
+    <h1>Reinforced Concrete Bending Moment Capacity Calculator</h1>
+
+    <!-- Precision Input -->
+    <br>
+        Precision: <input type="number" id="precision" value="6" min="1" name="precision" style="width: 150px ;">
+    <br>
+	<br>
+    <input type="button" onclick="resetPage()" value="Reset page">
+
+    <div class="container">
+        <!-- Section and Rebar Properties -->
+        <div class="section">
+            <h2>Section & Rebar Properties</h2>
+            <table>
+                <tr>
+                    <td>Section Width (mm)</td>
+                    <td>b</td>
+                    <td><input type="number" id="Width" name="Width" min="0" value="350"></td>
+                </tr>			
+                <tr>
+                    <td>Tension Rebar Area (mm<sup>2</sup>)</td>
+                    <td>A<sub>s</sub></td>
+                    <td><input type="number" id="tensionArea" name="tensionArea" min="0" value="1472.6"></td>
+                </tr>
+                <tr>
+                    <td>Tension Rebar Distance from Top (d) (mm)</td>
+                    <td>d</td>
+                    <td><input type="number" id="tensionDistance" name="tensionDistance" min="0" value="400"></td>
+                </tr>
+            </table>
+
+            <div class="checkbox-container">
+                <label for="compressionRebarCheckbox">Include Compression Rebar</label>			
+                <input type="checkbox" id="compressionRebarCheckbox" name="compressionRebarCheckbox" >
+            </div>			
+
+            <table id="compressionRebarTable" style="display: none;">
+                <tr>
+                    <td>Compression Rebar Area (mm<sup>2</sup>)</td>
+                    <td>A<sub>s</sub>'</td>
+                    <td><input type="number" id="compressionArea" name="compressionArea" min="0" value="942.5"></td>
+                </tr>
+                <tr>
+                    <td>Compression Rebar Distance from Top (mm)</td>
+                    <td>d'</td>
+					<td><input type="number" id="compressionDistance" name="compressionDistance" min="0" value="40"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Material Properties -->
+        <div class="section">
+            <h2>Material Properties</h2>
+            <table>
+                <tr>
+                    <td>Concrete Characteristic Strength (N/mm<sup>2</sup>)</td>
+                    <td>f<sub>ck</sub></td>
+                    <td><input type="number" id="concStrength" name="concStrength" min="0" value="35"></td>
+                </tr>
+                <tr>
+                    <td>Partial Concrete Factor </td>
+                    <td>&gamma;<sub>c</sub></td>	
+                    <td><input type="number" id="gammaConc" name="gammaConc" min="0" value="1.5"></td>
+                </tr>
+                <tr>
+                    <td>Steel Yield Strength (N/mm<sup>2</sup>)</td>
+                    <td>f<sub>yk</sub></td>
+                    <td><input type="number" id="steelYieldStrength" name="steelYieldStrength" min="0" value="500"></td>
+                </tr>
+                <tr>
+                    <td>Partial Steel Factor </td>
+                    <td>&gamma;<sub>s</sub></td>
+                    <td><input type="number" id="gammaSteel" name="gammaSteel" min="0" value="1.15"></td>
+                </tr>
+                <tr>
+                    <td>Steel Young's Modulus (E<sub>s</sub>) (N/mm<sup>2</sup>)</td>
+                    <td>E<sub>s</sub></td>
+                    <td><input type="number" id="steelModu" name="steelModu" value="200000"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+	
+    <div class="output-container">
+        <button id="calculate" onclick="calculate()">Calculate</button>
+        <!--<div class="output-box">S (mm): <span id="s_output">0</span></div> -->
+        <div class="output-box">Neutral Axis depth X (mm): <span id="x_output">0</span></div>
+        <!--<div class="output-box">Yield Strain: <span id="yieldStrain_output">0</span></div> -->
+        <!--<div class="output-box">Tension Rebar Strain: <span id="tensStrain_output">0</span></div> -->
+        <!--<div class="output-box">Compression Rebar Strain: <span id="compStrain_output">0</span></div> -->
+        <!--<div class="output-box">Tension Rebar Force (kN): <span id="tensForce_output">0</span></div> -->
+        <!--<div class="output-box">Compression Rebar Force (kN): <span id="compForce_output">0</span></div> -->
+        <!--<div class="output-box">Concrete Force (kN): <span id="concreteForce_output">0</span></div> -->
+        <div class="output-box">Bending Moment Capacity (kNm): <span id="momentCap_output">0</span></div>
+    </div>
+
+    <script>
+//---------------------------------------------------------------------------------------------------	
+
+        // Hiding Inputs for Compression Rebar
+		document.getElementById("compressionRebarCheckbox").addEventListener("change", function () {
+			const compressionRebarTable = document.getElementById("compressionRebarTable");
+			if (this.checked) {
+				compressionRebarTable.style.display = "table";
+			} else {
+				compressionRebarTable.style.display = "none";
+			}
+		});
+		
+//---------------------------------------------------------------------------------------------------	
+
+		// Reset Page
+		function resetPage() {
+			document.getElementById("precision").value = "6";
+			document.getElementById("Width").value = "";
+			document.getElementById("tensionArea").value = "";
+			document.getElementById("tensionDistance").value = "";
+			document.getElementById("compressionArea").value = "";
+			document.getElementById("compressionDistance").value = "";
+			document.getElementById("concStrength").value = "";
+			document.getElementById("gammaConc").value = "";
+			document.getElementById("steelYieldStrength").value = "";
+			document.getElementById("gammaSteel").value = "";
+			document.getElementById("steelModu").value = "";
+			return true; 
+		}
+
+//---------------------------------------------------------------------------------------------------
+
+        function calculate() {
+			
+			// Getting Variables
+			
+			var precision = parseInt( document.getElementById("precision").value);		
+			var Width = parseFloat(document.getElementById("Width").value);
+			var tensionArea = parseFloat(document.getElementById("tensionArea").value);
+			var tensionDistance = parseFloat(document.getElementById("tensionDistance").value);
+			var concStrength = parseFloat(document.getElementById("concStrength").value);
+			var gammaConc = parseFloat(document.getElementById("gammaConc").value) ;
+			var steelYieldStrength = parseFloat(document.getElementById("steelYieldStrength").value);
+			var gammaSteel = parseFloat(document.getElementById("gammaSteel").value) ;
+			var steelModu = parseFloat(document.getElementById("steelModu").value);
+			var compressionRebarCheckbox = document.getElementById("compressionRebarCheckbox").checked;			
+
+			if (compressionRebarCheckbox) {
+				var compressionArea = parseFloat(document.getElementById("compressionArea").value);
+				var compressionDistance = parseFloat(document.getElementById("compressionDistance").value);
+			} else {
+				compressionArea = 0
+				compressionDistance = 0
+			}
+			
+			// Validation checks
+			if (precision <= 0) { alert("Precision should be > 0"); return false; }
+			if (Width <= 0) { alert("Section Width should be > 0"); return false; }
+			if (tensionArea < 0) { alert("Tension Rebar Area should be > 0"); return false; }
+			if (tensionDistance <= 0) { alert("Tension Rebar Distance from Top should be > 0"); return false; }
+			if (concStrength <= 0) { alert("Concrete Characteristic Strength should be > 0"); return false; }
+			if (gammaConc <= 0) { alert("Partial Concrete Factor should be > 0"); return false; }
+			if (steelYieldStrength <= 0) { alert("Steel Yield Strength should be > 0"); return false; }
+			if (gammaSteel <= 0) { alert("Partial Steel Factor should be > 0"); return false; }
+			if (steelModu <= 0) { alert("Steel Young's Modulus should be > 0"); return false; }
+			if (compressionRebarCheckbox && compressionArea < 0) { alert("Compression Rebar Area should be > 0"); return false; }
+			if (compressionRebarCheckbox && compressionDistance <= 0) { alert("Compression Rebar Distance from Top should be > 0"); return false; }
+
+			// Main Calculations
+			
+			var s_mm = (gammaConc / (gammaSteel * 0.85)) * ((steelYieldStrength * (tensionArea - compressionArea))/(concStrength * Width));
+			
+			var x_mm = s_mm / 0.8;
+			
+			var tensForce = (steelYieldStrength / gammaSteel) * tensionArea;
+			
+			if (compressionRebarCheckbox) {			
+				var compForce = (steelYieldStrength / gammaSteel) * compressionArea;
+			} else {
+				compForce = 0
+			}
+			
+			//Yielding Strain Checks
+			
+			var yieldStrain = (steelYieldStrength / gammaSteel) / steelModu;	//Yield Strain
+
+			var tensStrain = 0.0035 * ((tensionDistance - x_mm)/ x_mm);
+			
+			if (compressionRebarCheckbox) {			
+				var compStrain = 0.0035 * ((x_mm - compressionDistance) / x_mm	);				
+			} else {
+				compStrain = 0
+			}
+			
+			if (tensStrain < yieldStrain) {
+				tensForce = tensStrain * steelModu * tensionArea;
+			}
+			
+			if (compressionRebarCheckbox && compStrain < yieldStrain) {
+				compForce = compStrain * steelModu * compressionArea;
+			}
+			
+			// Recalculate
+			
+			if (compressionRebarCheckbox && (compStrain < yieldStrain || tensStrain < yieldStrain)) {
+				s_mm = (tensForce - compForce)/((0.85 * concStrength * Width)/gammaConc);
+				x_mm = s_mm / 0.8
+			}
+			
+			var concreteForce_kN = ((0.85 * concStrength * Width * s_mm) / gammaConc)/1000;
+			var tensForce_kN = tensForce / 1000
+			var compForce_kN = compForce / 1000
+			
+			var concreteLever_m = (tensionDistance - (s_mm / 2)) / 1000
+			
+			var tensionLever_m = (tensionDistance - compressionDistance) / 1000
+			
+			var momentCap = (concreteForce_kN * concreteLever_m) + (compForce_kN * tensionLever_m);
+
+			// Display rounded outputs			
+			//document.getElementById( "s_output" ).innerText =	s_mm.toPrecision(precision)	;
+			document.getElementById( "x_output" ).innerText =	x_mm.toPrecision(precision)	;
+			//document.getElementById( "yieldStrain_output" ).innerText =	yieldStrain.toPrecision(precision)	;
+			//document.getElementById( "tensStrain_output" ).innerText = tensStrain.toPrecision(precision) ;
+			//document.getElementById( "compStrain_output" ).innerText =	compStrain.toPrecision(precision) ;
+			//document.getElementById( "tensForce_output" ).innerText = tensForce_kN.toPrecision(precision) ;
+			//document.getElementById( "compForce_output" ).innerText = compForce_kN.toPrecision(precision) ;
+			//document.getElementById( "concreteForce_output" ).innerText =	concreteForce_kN.toPrecision(precision) ;				
+			document.getElementById( "momentCap_output" ).innerText =	momentCap.toPrecision(precision) ;
+			return true; 
+		}    
+	</script>
+</body>
+</html>
